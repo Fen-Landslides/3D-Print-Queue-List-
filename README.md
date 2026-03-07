@@ -1,69 +1,69 @@
-### 3D 列印排隊系統
+### 3D Printing Queuing System ###
 
-一個基於 **Firebase Firestore** 的簡易 3D 列印排隊 / 叫號系統，支援：
+It is just an simple 3D printing wueuing system based on **Firebase Firestore**, it features：
 
-- **即時同步**：多台電腦 / 平板 / 手機同時查看與操作隊列。
-- **拖曳排序**：用滑鼠拖曳卡片左側把手即可調整優先順序。
-- **進度控管**：支援「等待中」「進行中」「已完成」三種狀態，並記錄開始與完成時間。
-- **預估時間 ETA**：可輸入預估列印時間，進行中時會顯示剩餘分鐘數。
-- **材料 / 顏色備註**：可記錄材料與顏色需求。
-- **管理 PIN**：刪除 / 退回 / 復原需輸入 PIN，避免一般使用者誤操作。
-- **CSV 匯出**：可匯出目前隊列與完成紀錄，方便統計與留存。
-- **PWA 安裝**：支援安裝為桌面 / 手機 App，並具備離線快取。
-- **完成通知**：開啟瀏覽器通知權限後，列印完成時會彈出通知。
-
----
-
-### 目錄
-
-- **專案結構**
-- **功能說明**
-- **快速開始**
-- **Firebase 設定步驟**
-- **部署建議**
-- **進階設定**
-- **授權**
+- **Always-Update Sycronization**：You can check the queue in all of your device.
+- **Sorted by Warp**：You can sort the queue anytime by warping the cards up and down.
+- **Progress Control**：There are three status for each card: "Waiting", "On-going", "Done". The starting and ending time will be logged.
+- **Estimated Time ETA**：Input the estimated time and it shows the remaining.
+- **Material / Colour**：Allowed to record the material and colour desired.
+- **Lock PIN**：Avoiding mishandling by setting and requiring Pin before making move.
+- **CSV export**：Make it easy to chart and save the results by saving the current queue and finished progress.
+- **PWA Install**：Having phone/ desktop client, and they cache your setting and progress offline.
+- **Notification**：Notice you when a progress done.
 
 ---
 
-### 專案結構
+### Table of content ###
 
-- `index.html`：主頁面與全部前端邏輯（Tailwind CDN + Firebase JS SDK）。
-- `manifest.webmanifest`：PWA 設定（名稱、圖示、主題色等）。
-- `sw.js`：Service Worker，用來快取靜態資源，支援離線瀏覽。
-- `icon-192.png` / `icon-512.png`：PWA App 圖示。
+- **The Structure**
+- **Features**
+- **A Quick Start**
+- **How to set the Firebase**
+- **Recommended setting**
+- **Advanced setting**
+- **Authorisation**
 
 ---
 
-### 功能說明
+### The Structure
 
-- **新增列印項目**
-  - 輸入描述（件名 / 學號 / 需求）、ETA 分鐘與材料 / 顏色（可選），按「新增」即可寫入 Firestore。
-- **等待列（`等待列` 區塊）**
-  - 顯示所有 `waiting` 狀態的項目，依照 `order` 欄位排序。
-  - 可透過拖曳卡片左側把手重新排序，順序變更會回寫到 Firestore。
-  - 每張卡片可操作：
-    - `開始`：改為 `serving` 狀態並記錄 `startedAt`。
-    - `刪除`：刪除該項目（若設定 PIN，需先輸入）。
-- **目前進行中（`目前進行中` 區塊）**
-  - 顯示所有 `serving` 狀態的項目。
-  - 依 `etaMin` 與 `startedAt` 計算剩餘時間。
-  - 每張卡片可操作：
-    - `完成`：改為 `done` 並記錄 `finishedAt`，若已開啟通知會彈出提示。
-    - `退回等待`：狀態改回 `waiting`（若設定 PIN，需先輸入）。
-- **已完成項目**
-  - 不顯示在主列表，但可透過「完成紀錄（區間）」匯出 CSV 查看。
-  - 卡片操作 `復原到等待` 時會把狀態改回 `waiting`，並清除 `finishedAt`。
-- **管理 PIN**
-  - 透過「設定 / 移除 PIN」按鈕設定 4–8 位數字 PIN，會儲存在瀏覽器 `localStorage`。
-  - 目前只有 **刪除 / 退回等待 / 復原到等待** 三種操作需要輸入 PIN。
-  - 「開始下一位」與「開始 / 完成」動作不需要 PIN，以方便操作。
-- **完成通知**
-  - 按下「開啟完成通知」後，瀏覽器會要求通知權限。
-  - 權限允許後，列印項目標記為完成時會以系統通知顯示。
-- **CSV 匯出**
-  - `匯出 CSV`：將目前集合中的所有文件（不分狀態）匯出。
-  - `完成紀錄（區間）`：輸入起訖日期，只匯出在時間區間內完成 (`status == done`) 的項目，並計算實際耗時分鐘數。
+- `index.html`：The main page and the Front-End logic（Tailwind CDN + Firebase JS SDK).
+- `manifest.webmanifest`：PWA Setting（name、icon、theme, etc).
+- `sw.js`：Service Worker，it cache the static information and hence allowing offline browsing.
+- `icon-192.png` / `icon-512.png`：PWA App Icon.
+
+---
+
+### Features
+
+- **New Item**
+  - Input Desciption（name of item / Student ID / Demand）、ETA time, desired material and colour (Optional). Input them to Firestore by pressing "ADD".
+- **The Queue（`The Queue` block）**
+  - Showing all items in status `waiting`，sorted by `order`.
+  - Wrapping the cards to sort the cards，the changes will be write into Firestore.
+  - Card's handling：
+    - `Start`：Change the status to `serving` and record the `startedAt`.
+    - `Delete`：Delete the item, lock pin necessaried.
+- **On-Going（`On-Going` block）**
+  - Show all item under `serving`,
+  - Calculate the remaining time with `etaMin` and `startedAt`。
+  - Card's movement：
+    - `Done`：Labelled as `done` and record the `finishedAt`，notice the users if allowed.
+    - `Wait`：Change the status to `waiting`, lock pin required.
+- **Finished**
+  - Only be seen in "Finished Item".
+  - "Back to wait" change the status to "waiting" and erase the finishedAT.
+- **PIN management**
+  - "Set/ Remove Pin" set 4-8 bits pin and store the pin to 'localStorage`。
+  - Only **"Delete"** / **"Wait"** / **"Back to wait"** require PIN。
+  - "Next progress", "Start", "Done" do not require pin.。
+- **Notification**
+  - After clicking on "Notify when finished"，the browser will require the permission to notify.
+  - Notification would pump out when a progress finished and notification allowed.
+- **CSV Export**
+  - `Export CSV：Export all file ignoring their status.
+  - `Finished Record (Period)`：，只匯出在時間區間內完成 (`status == done`) 的項目，並計算實際耗時分鐘數。
 
 ---
 
@@ -158,7 +158,8 @@ service cloud.firestore {
 
 ---
 
-### 授權
+### Authorisation
 
 若原始專案未附帶授權條款，建議在此補充專案的授權方式（例如 MIT License），以便他人合法使用與修改。你也可以依實際需求標註版權宣告與使用限制。
+
 
