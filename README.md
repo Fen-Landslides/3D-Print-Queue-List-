@@ -20,7 +20,7 @@ It is just an simple 3D printing wueuing system based on **Firebase Firestore**,
 - **Features**
 - **A Quick Start**
 - **How to set the Firebase**
-- **Recommended setting**
+- **Recommended Deployment**
 - **Advanced setting**
 - **Authorisation**
 
@@ -63,103 +63,104 @@ It is just an simple 3D printing wueuing system based on **Firebase Firestore**,
   - Notification would pump out when a progress finished and notification allowed.
 - **CSV Export**
   - `Export CSV：Export all file ignoring their status.
-  - `Finished Record (Period)`：，只匯出在時間區間內完成 (`status == done`) 的項目，並計算實際耗時分鐘數。
+  - `Finished Record (Period)`：，Import the item which (`status == done`) within a specific time, and calculate the actual time cost by the item.
 
 ---
 
-### 快速開始
+### A Quick Start
 
-> 專案為靜態前端頁面，不需要 Node.js 後端。只要有一個支援 HTTPS 的靜態空間（例如 Firebase Hosting / Vercel / Netlify / GitHub Pages 等）即可。
+This project is a static frontend page, so no Node.js backend is required. A static hosting service that supports HTTPS (such as Firebase Hosting, Vercel, Netlify, or GitHub Pages) is the only thing you need.
 
-1. **下載專案**
-   - 直接下載本專案壓縮檔解壓縮，或 `git clone` 到本機。
-2. **建立 Firebase 專案**
-   - 到 Firebase Console 建立新專案，並開啟 **Firestore 資料庫**。
-   - 在「構建 → Authentication」中啟用 **匿名登入**。
-3. **取得 Web App 設定**
-   - 在 Firebase 專案中新增一個 Web App，複製其 `firebaseConfig`。
-4. **修改 `index.html` 中的 Firebase 設定**
-   - 找到：
+1. **Download your project**
+   - Download and unzip the project file, or use git clone to copy it to your computer.
+2. **Set up your Firebase**
+   - Go to the Firebase Console, create a new project, and enable the Firestore Database.
+   - Go to "Build → Authentication" and enable **Anonymous Sign-in**.
+3. **Get the setting of Web APP**
+   - Add a "Web App" to your Firebase project and copy its **firebaseConfig**.
+4. **Change the Firebase Settings in index.html**
+   - Go and find：
      - `const firebaseConfig = { ... }`
-   - 將裡面的 `apiKey`、`authDomain`、`projectId` 等欄位改為你專案的設定。
-5. **變更隊列 ID（選用）**
-   - 檔案上方有：
+   - Change the content in slot:`apiKey`、`authDomain`、`projectId` into the information of your project.
+5. **Change the Queue ID (Optional)**
+   - There is a line on the file：
      - `const QUEUE_ID = 'default';`
-   - 若同一個 Firebase 專案要建立多條獨立隊列，可改成不同的字串，例如 `labA`、`labB`，不同頁面使用不同 ID 即可。
-6. **本機測試**
-   - 建議使用任何簡單的靜態伺服器工具，像是：
-     - VSCode / Cursor 的 Live Server 外掛
-     - 或在資料夾下用 Python 啟動簡單伺服器：
+   - If you want to run many queues in one Firebase project, change this string to something like "labA" or "labB".
+6. **Test on local**
+   - Grab a simple static server tool to view your project, such as:
+     - The Live Server extension for VSCode or Cursor.
+     - Run a command in your project folder:
 
 ```bash
 python -m http.server 8080
 ```
 
-   - 然後瀏覽 `http://localhost:8080` 測試。
-   - 注意：為了使用通知與某些瀏覽器存取權限，建議使用 **HTTPS** 網站做實際部署。
+   - Go to `http://localhost:8080` and start the testing,
+   - Please be awared that you will need to make your live with HTTP website in order to use browser notifications and specific permissions.
 
 ---
 
-### Firebase 設定與資料結構
+### How to set the Firebase
 
-- **集合名稱**
-  - 程式會使用：
+- **Collection name**
+  - The program is likely to use：
     - `const COLLECTION = "queue_3dprint_" + QUEUE_ID`
-  - 例如 `QUEUE_ID = "default"` 則集合名稱為 `queue_3dprint_default`。
+  - For example, `QUEUE_ID = "default"`, the collection name will become `queue_3dprint_default`。
 
-- **文件欄位**
-  - `text`: 描述文字。
-  - `etaMin`: 預估時間（分鐘, 可為 `null`）。
-  - `material`: 材料 / 顏色（可為 `null`）。
+- **Document Slot**
+  - `text`: It is description.
+  - `etaMin`: Estimated time（minutes, can be `null`）。
+  - `material`: Material / colour（Can be `null`）。
   - `status`: `"waiting" | "serving" | "done"`。
-  - `order`: 排序用整數（時間戳為主）。
-  - `createdAt`: 建立時間（serverTimestamp）。
-  - `startedAt`: 開始時間（serverTimestamp 或 `null`）。
-  - `finishedAt`: 完成時間（serverTimestamp 或 `null`）。
+  - `order`: It is a number used for sorting (based on timestamp).
+  - `createdAt`: Built time（serverTimestamp）。
+  - `startedAt`: Starting time（serverTimestamp or `null`）。
+  - `finishedAt`: Finished time（serverTimestamp or `null`）。
 
-- **建議 Firestore 規則範例（僅供參考，請依實際需求調整）**
+- **Recommended Rules (Please change it according to your needs)**
 
 ```txt
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /queue_3dprint_{queueId}/{docId} {
-      allow read: if true;                    // 任何人可讀
-      allow write: if request.auth != null;   // 需登入（此專案使用匿名登入）
+      allow read: if true;                    // Open to everyone to read.
+      allow write: if request.auth != null;   // Login required (Anonymous sign-in in this place)
     }
   }
 }
 ```
 
-> 若要加強權限控管，可以額外比對 `request.auth.uid` 或加入管理者清單等，請依實際場域安全需求自行擴充。
+> For better security, you can restrict access more by checking specific User IDs (request.auth.uid) or building a whitelist.
 
 ---
 
-### 部署建議
+### 
 
 - **Firebase Hosting**
-  - 最簡單的部署方式，可以與 Firestore 同一專案管理。
-  - 將專案檔案放到 `public` 目錄後執行 `firebase deploy` 即可。
+  - It is the easiest way，capable of managing Firestore within the same project.
+  - Place your files in a public folder and run "firebase deploy".
 - **Vercel / Netlify / GitHub Pages**
-  - 本專案是純靜態檔案，只要把整個資料夾部署上去即可。
-  - 確認部署環境支援 HTTPS，以便正常使用通知與匿名登入等功能。
+  - Since this is a pure static project, just upload the folder to these services.
+  - Ensure your domain uses HTTPS so that features like notifications and anonymous login working charm.
 
 ---
 
-### 進階設定
+### Advanced setting
 
-- **多條隊列**
-  - 可複製一份 `index.html` 為 `labA.html`、`labB.html`，改寫各自的 `QUEUE_ID`，就能用同一 Firebase 專案管理多條獨立隊列。
-- **預設管理 PIN**
-  - 預設不會寫死 PIN，而是透過介面設定並存入 `localStorage`。
-  - 若需固定 PIN，可以在載入時檢查 `localStorage` 或直接寫死邏輯，但請務必評估安全性。
-- **UI 調整**
-  - 本專案使用 Tailwind CDN，可直接在 `index.html` 中調整 class 或自行加入自訂樣式。
+- **Multiple queue**
+  - You can make a copie of index.html (e.g., labA.html, labB.html) and rewrite their unique QUEUE_ID. This allows you to manage several queues within one project.
+- **Default Admin Pin**
+  - PIN is not hardcoded，but being set and saved to `localStorage` instead.
+  - If you need to make the PIN permanent, you can check 'localStorage' when it loads or just hardcode it, but please think twice before taking actions.
+- **UI Adjustment**
+  - This project apply Tailwind CDN，direct change in class in `index.html` become an option, or you may add custom model by your own.
 
 ---
 
 ### Authorisation
 
-若原始專案未附帶授權條款，建議在此補充專案的授權方式（例如 MIT License），以便他人合法使用與修改。你也可以依實際需求標註版權宣告與使用限制。
+If this project does not have a specific license, we recommend adding one (like the MIT License) so others know how they can legally use and modify your code. Feel free to add your own copyright or usage terms here.
+
 
 
