@@ -162,5 +162,12 @@ service cloud.firestore {
 
 If this project does not have a specific license, we recommend adding one (like the MIT License) so others know how they can legally use and modify your code. Feel free to add your own copyright or usage terms here.
 
+---
+
+### Introduction Video Links
+
+Task 1: https://youtu.be/os7a-DiniHs
+Task 2: https://youtu.be/p7-S7SsJs64
+
 
 
